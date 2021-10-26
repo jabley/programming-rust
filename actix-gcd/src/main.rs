@@ -61,3 +61,51 @@ fn gcd(mut n: u64, mut m: u64) -> u64 {
     }
     n
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::body::{Body, ResponseBody};
+    use actix_web::http;
+
+    trait BodyTest {
+        fn as_str(&self) -> &str;
+    }
+
+    impl BodyTest for ResponseBody<Body> {
+        fn as_str(&self) -> &str {
+            match self {
+                ResponseBody::Body(ref b) => match b {
+                    Body::Bytes(ref by) => std::str::from_utf8(by).unwrap(),
+                    _ => panic!(),
+                },
+                ResponseBody::Other(ref b) => match b {
+                    Body::Bytes(ref by) => std::str::from_utf8(by).unwrap(),
+                    _ => panic!(),
+                },
+            }
+        }
+    }
+
+    #[actix_rt::test]
+    async fn test_index_ok() {
+        let resp = get_index().await;
+        assert_eq!(resp.status(), http::StatusCode::OK);
+    }
+
+    #[actix_rt::test]
+    async fn test_post_without_parameters() {
+        let resp = post_gcd(web::Form(GcdParameters { n: 0, m: 0 })).await;
+        assert_eq!(resp.status(), http::StatusCode::BAD_REQUEST);
+    }
+
+    #[actix_rt::test]
+    async fn test_post_with_expected_input() {
+        let resp = post_gcd(web::Form(GcdParameters { n: 24, m: 81 })).await;
+        assert_eq!(resp.status(), http::StatusCode::OK);
+        assert_eq!(
+            resp.body().as_str(),
+            "The greatest common divisor of the numbers 24 and 81 is <b>3</b>"
+        )
+    }
+}
