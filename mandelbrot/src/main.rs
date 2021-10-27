@@ -67,10 +67,7 @@ fn parse_pair<T: FromStr>(s: &str, separator: char) -> Option<(T, T)> {
 /// Parse a pair of floating-point numbers separated by a common as a complex
 /// number.
 fn parse_complex(s: &str) -> Option<Complex<f64>> {
-    match parse_pair(s, ',') {
-        Some((re, im)) => Some(Complex { re, im }),
-        None => None,
-    }
+    parse_pair(s, ',').map(|(re, im)| Complex { re, im })
 }
 
 /// Given the row and column of a pixel in the output image, return the
@@ -126,12 +123,7 @@ fn write_image(
     let output = File::create(filename)?;
 
     let encoder = PNGEncoder::new(output);
-    encoder.encode(
-        &pixels,
-        bounds.0 as u32,
-        bounds.1 as u32,
-        ColorType::Gray(8),
-    )?;
+    encoder.encode(pixels, bounds.0 as u32, bounds.1 as u32, ColorType::Gray(8))?;
 
     Ok(())
 }
